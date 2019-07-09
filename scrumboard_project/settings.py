@@ -42,7 +42,6 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = 'scrumboard_app.ScrumUser'
 
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

@@ -23,7 +23,6 @@ def loginView(request):
             un = form.cleaned_data['username']
             pw = form.cleaned_data['password']
             user = authenticate(request, username=un, password=pw)
-            print(form.cleaned_data['password'])
             if user is not None:
                 login(request, user)
                 return redirect('index')
@@ -37,7 +36,10 @@ def registerView(request):
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.set_password(form['password'])
+            user.set_password(user.password)
+            user.active = True
+            user.staff = False
+            user.admin = False
             user.save()
             login(request, user)
             return redirect('index')
