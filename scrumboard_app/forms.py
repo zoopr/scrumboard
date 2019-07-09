@@ -2,14 +2,10 @@ from django import forms
 from .models import ScrumUser
 
 
-class LoginForm(forms.ModelForm):
+class LoginForm(forms.Form):
 
-    class Meta:
-        model = ScrumUser
-        fields = ('username', 'password',)
-        help_texts = {
-            'username': None,
-        }
+    username = forms.CharField(max_length=30, required=True)
+    password = forms.CharField(max_length=30, required=True)
 
 
 class RegisterForm(forms.ModelForm):

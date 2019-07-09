@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
 from .forms import *
 
 # Create your views here.
@@ -15,17 +16,31 @@ def dashboard(request):
     pass
 
 
-def login(request):
+def loginView(request):
     if request.method == "POST":
-        pass  # Handle login request
+        form = LoginForm(request.POST)
+        if form.is_valid() is True:
+            un = form.cleaned_data['username']
+            pw = form.cleaned_data['password']
+            user = authenticate(request, username=un, password=pw)
+            print(form.cleaned_data['password'])
+            if user is not None:
+                login(request, user)
+                return redirect('index')
     else:
         form = LoginForm()
     return render(request, "scrumboard_app/login.html", {'form': form})
 
 
-def register(request):
+def registerView(request):
     if request.method == "POST":
-        pass  # Handle registration request
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.set_password(form['password'])
+            user.save()
+            login(request, user)
+            return redirect('index')
     else:
         form = RegisterForm()
     return render(request, "scrumboard_app/register.html", {'form': form})
