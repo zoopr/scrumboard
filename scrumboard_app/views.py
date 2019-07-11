@@ -25,6 +25,7 @@ def dashboard(request):
             for colonna in colonne:
                 numcard += len(colonna.getCardColonna())
             attrs.append({
+                        'id': board.id,
                         'nome': board.nome,
                         'numCard': numcard
             })
@@ -55,6 +56,24 @@ def logoutView(request):
     return redirect('index')
 
 
+def addBoard(request):
+    if request.method == "POST":
+        form = BoardForm(request.POST)
+        if form.is_valid() is True:
+            if not Board.objects.filter(nome= form.cleaned_data['nomeBoard']).exists() :
+                b = Board(nome=form.cleaned_data['nomeBoard'])
+                b.save()
+                b.utentiAssociati.add(request.user)
+                b.save()
+                return redirect('dashboard')
+            else:
+                # TODO: modulo di errore vero
+                form.add_error(None, "Board dallo stesso nome già presente")
+    else:
+        form = BoardForm()
+    return render(request, "scrumboard_app/add_board.html", {'form': form})
+
+
 def registerView(request):
     if request.method == "POST":
         form = RegisterForm(request.POST)
@@ -80,5 +99,41 @@ def burndown(request, board_id):
     pass
 
 
-def board_utente(request, board_id):
+def board_details(request, board_id):
+    b = Board.objects.get(id=board_id)
+    attrs = {
+        'id': board_id,
+        'nome':b.nome,
+        'colonne': []
+    }
+    for col in b.getColonneBoard():
+        dict_col = {
+            'id': col.id,
+            'nome': col.nome,
+            'cards': []
+        }
+        for card in col.getCardColonna():
+            dict_card = {
+                'id': card.id,
+                'nome': card.nome
+            }
+            dict_col['cards'].append(dict_card)
+        attrs['colonne'].append(dict_col)
+    return render(request, "scrumboard_app/board_details.html", {'board': attrs})
+
+
+def addColumn(request):
+    pass
+
+
+def addCard(request):
+    pass
+
+def addUser(request):
+    pass
+
+def editColumn(request):
+    pass
+
+def editCard(request):
     pass

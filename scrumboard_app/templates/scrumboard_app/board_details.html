@@ -1,0 +1,30 @@
+{% extends 'scrumboard_app/base.html' %}
+{% block content %}
+    <form method="GET" action="{% url 'add_column' %}" class="add-column-form">{% csrf_token %}
+    <button type="submit">Aggiungi Colonna</button>
+    </form>
+
+    <form method="GET" action="{% url 'add_card' %}" class="add-card-form">{% csrf_token %}
+    <button type="submit">Aggiungi Card</button>
+    </form>
+
+    <form method="GET" action="{% url 'add_user' board_id=board.id%}" class="add-user-form">{% csrf_token %}
+    <button type="submit">Aggiungi Utente</button>
+    </form>
+
+    <form method="GET" action="{% url 'burndown' board_id=board.id%}" class="burndown-form">{% csrf_token %}
+    <button type="submit">Burndown</button>
+    </form>
+
+    <form method="POST" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}
+    <button type="submit">Logout</button>
+    </form>
+
+    <h1>{{ board.nome }}</h1>
+    {% for colonna in board.colonne %}
+        <a href="{% url 'edit_column' col_id=colonna.id %}">{{ colonna.nome }}</a>
+        {% for card in colonna.cards %}
+            <a href="{% url 'edit_card' card_id=card.id %}">{{ card.nome }}</a>
+        {% endfor %}
+    {% endfor %}
+{% endblock %}

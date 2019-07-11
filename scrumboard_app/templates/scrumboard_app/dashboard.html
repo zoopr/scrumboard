@@ -1,12 +1,14 @@
 {% extends 'scrumboard_app/base.html' %}
-
 {% block content %}
+    <form method="GET" action="{% url 'add_board' %}" class="add-board-form">{% csrf_token %}
+    <button type="submit">Aggiungi Board</button>
+    </form>
     <form method="POST" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}
     <button type="submit">Logout</button>
     </form>
     <h1>Le tue Boards</h1>
     {% for board in boards %}
-        <p>{{ board.nome }}</p>
+        <a href="{% url 'board_details' board_id=board.id %}">{{ board.nome }}</a>
         <p>{{ board.numCard }} Card</p>
     {% endfor %}
 {% endblock %}

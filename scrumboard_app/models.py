@@ -9,7 +9,7 @@ class ScrumUser(AbstractUser):
 
 class Board(models.Model):
     # Genera in automatico una primary key numerica incrementale di id.
-    nome = models.CharField(max_length=30)
+    nome = models.CharField(max_length=30, unique=True)
     utentiAssociati = models.ManyToManyField("ScrumUser")
 
     def getColonneBoard(self):
