@@ -1,6 +1,9 @@
 {% extends 'scrumboard_app/base.html' %}
 
 {% block content %}
+    <form method="POST" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}
+    <button type="submit">Logout</button>
+    </form>
     <h1>Le tue Boards</h1>
     {% for board in boards %}
         <p>{{ board.nome }}</p>

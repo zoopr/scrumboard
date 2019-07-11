@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from .forms import *
 from .models import *
@@ -50,6 +50,11 @@ def loginView(request):
     return render(request, "scrumboard_app/login.html", {'form': form})
 
 
+def logoutView(request):
+    logout(request)
+    return redirect('index')
+
+
 def registerView(request):
     if request.method == "POST":
         form = RegisterForm(request.POST)
@@ -68,6 +73,7 @@ def registerView(request):
     else:
         form = RegisterForm()
     return render(request, "scrumboard_app/register.html", {'form': form})
+
 
 
 def burndown(request, board_id):
