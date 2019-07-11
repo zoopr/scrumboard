@@ -8,8 +8,7 @@ class LoginForm(forms.Form):
     password = forms.CharField(max_length=30, required=True)
 
 
-class RegisterForm(forms.ModelForm):
+class RegisterForm(forms.Form):
 
-    class Meta:
-        model = ScrumUser
-        fields = ('username', 'password',)
+    username = forms.CharField(max_length=30, required=True)
+    password = forms.CharField(max_length=30, required=True)
