@@ -115,7 +115,7 @@ def board_details(request, board_id):
         for card in col.getCardColonna():
             dict_card = {
                 'id': card.id,
-                'nome': card.nome
+                'nome': card.titolo
             }
             dict_col['cards'].append(dict_card)
         attrs['colonne'].append(dict_col)
@@ -129,11 +129,11 @@ def addColumn(request):
 def addCard(request):
     pass
 
-def addUser(request):
+def addUser(request, board_id):
     pass
 
-def editColumn(request):
+def editColumn(request, col_id):
     pass
 
-def editCard(request):
+def editCard(request, card_id):
     pass
