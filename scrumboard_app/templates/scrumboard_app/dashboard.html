@@ -1,0 +1,9 @@
+{% extends 'scrumboard_app/base.html' %}
+
+{% block content %}
+    <h1>Le tue Boards</h1>
+    {% for board in boards %}
+        <p>{{ board.nome }}</p>
+        <p>{{ board.numCard }} Card</p>
+    {% endfor %}
+{% endblock %}

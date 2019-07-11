@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from .forms import *
+from .models import *
 
 # Create your views here.
 
@@ -14,8 +15,22 @@ def index(request):
 
 
 def dashboard(request):
-    pass
-
+    if request.user.is_authenticated:
+        utenteCorrente = ScrumUser.objects.get(username=request.user.username)
+        attrs = []
+        listaBoard = Board.objects.filter(utentiAssociati=utenteCorrente)
+        for board in listaBoard:
+            colonne = board.getColonneBoard()
+            numcard = 0
+            for colonna in colonne:
+                numcard += len(colonna.getCardColonna())
+            attrs.append({
+                        'nome': board.nome,
+                        'numCard': numcard
+            })
+        return render(request, "scrumboard_app/dashboard.html", {'boards': attrs})
+    else:
+        return redirect('login')
 
 def loginView(request):
     if request.method == "POST":

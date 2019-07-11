@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import ScrumUser
+from .models import *
 
 admin.site.register(ScrumUser, UserAdmin)
+admin.site.register(Board)
