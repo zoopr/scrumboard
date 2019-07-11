@@ -114,6 +114,10 @@ h1, h2, h3, h4 {
   color: #EF3B3A;
 }
 
+.errorlist li {
+  list-style-type: none;
+}
+
 body {
   background: #76b852;
   background: -webkit-linear-gradient(right, #76b852, #8DC26F);
