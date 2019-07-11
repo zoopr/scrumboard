@@ -1,4 +1,4 @@
-#!C:\Users\skixx\PycharmProjects\scrumboard_project\venv\Scripts\python.exe
+#!c:\users\skixx\pycharmprojects\scrumboard_project\venv\scripts\python.exe
 from django.core import management
 
 if __name__ == "__main__":
