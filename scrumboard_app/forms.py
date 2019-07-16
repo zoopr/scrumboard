@@ -1,5 +1,24 @@
 from django import forms
-from .models import ScrumUser
+from .models import *
+
+
+class DateInput(forms.DateInput):
+    input_type = 'date'
+
+
+class AddColumnForm(forms.Form):
+
+    nomeColonna = forms.CharField(max_length=30, required=True, label='Nome')
+    boardParent = forms.ChoiceField(widget=forms.Select, label="Board di appartenenza")
+
+
+class AddCardForm(forms.Form):
+
+    nomeCard = forms.CharField(max_length=30, required=True, label='Titolo')
+    descCard = forms.CharField(widget=forms.Textarea, required=True, label='Descrizione')
+    dataCard = forms.DateField(widget=DateInput(), required=True, label='Data di Scadenza')
+    colonnaParent = forms.ChoiceField(widget=forms.Select, label="Colonna di appartenenza")
+
 
 
 class BoardForm(forms.Form):
@@ -17,3 +36,11 @@ class RegisterForm(forms.Form):
     username = forms.CharField(max_length=30, required=True)
     password = forms.CharField(widget=forms.PasswordInput(render_value=False), max_length=30, required=True)
     conferma_password = forms.CharField(widget=forms.PasswordInput(render_value=False), max_length=30, required=True)
+
+
+class DeleteUserForm(forms.Form):
+    utentiAssociati = forms.MultipleChoiceField(required=False, widget=forms.SelectMultiple, label='Utenti associati alla board')
+
+
+class AddUserForm(forms.Form):
+    utentiRegistrati = forms.ChoiceField(required=False, widget=forms.Select, label='Aggiungi Utente')

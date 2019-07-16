@@ -1,0 +1,14 @@
+{% extends 'scrumboard_app/base.html' %}
+
+{% block content %}
+    <div class="container">
+        <div class="login-page">
+            <div class="form">
+                <form method="POST" class="add-column-form">{% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit">Crea Nuova Colonna</button>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

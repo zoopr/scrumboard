@@ -5,7 +5,15 @@ from .forms import *
 from .models import *
 
 # Create your views here.
-
+def auth_check(board, user):
+    # C'è qualcosa di sbagliato nel check.
+    '''
+    for u in board.listaUtentiAssociati():
+        if user.username == u:
+            return False
+    return True
+    '''
+    return False
 
 def index(request):
     if request.user.is_authenticated:  # Redirect se l'utente è loggato
@@ -96,11 +104,19 @@ def registerView(request):
 
 
 def burndown(request, board_id):
-    pass
+    board = Board.objects.get(id=board_id)
+
+    if auth_check(board, request.user):
+        return redirect('dashboard')
 
 
 def board_details(request, board_id):
     b = Board.objects.get(id=board_id)
+
+    if auth_check(b, request.user):
+        print("AUTH FAIL")
+        return redirect('dashboard')
+
     attrs = {
         'id': board_id,
         'nome':b.nome,
@@ -123,14 +139,100 @@ def board_details(request, board_id):
 
 
 def addColumn(request):
-    pass
+    nomiAssociati = [b.nome for b in Board.objects.filter(utentiAssociati=request.user)]
+    boardAssociate = zip(range(len(nomiAssociati)), nomiAssociati)
+    if request.method == "POST":
+        form = AddColumnForm(request.POST)
+        form.fields['boardParent'].choices = boardAssociate
+        if form.is_valid() is True:
+            if not Colonna.objects.filter(nome= form.cleaned_data['nomeColonna']).exists():
+                c = Colonna(nome=form.cleaned_data['nomeColonna'])
+                b = Board.objects.get(nome=nomiAssociati[int(form.cleaned_data['boardParent'])])
+                c.boardParent = b
+                c.save()
+                return redirect('board_details', board_id=b.id)
+            else:
+                # TODO: modulo di errore vero
+                form.add_error(None, "Colonna dello stesso nome già presente")
+    else:
+        form = AddColumnForm()
+        form.fields['boardParent'].choices = boardAssociate
+    return render(request, "scrumboard_app/add_column.html", {'form': form})
 
 
-def addCard(request):
-    pass
+
+def addCard(request, board_id):
+    board = Board.objects.get(id=board_id)
+
+
+    if auth_check(board, request.user):
+        return redirect('dashboard')
+
+    nomiAssociati = [c.nome for c in board.getColonneBoard()]
+    colonneAssociate = zip(range(len(nomiAssociati)), nomiAssociati)
+    if request.method == "POST":
+        form = AddCardForm(request.POST)
+        form.fields['colonnaParent'].choices = colonneAssociate
+        if form.is_valid() is True:
+            if not Card.objects.filter(colonnaParent__in=board.getColonneBoard(), titolo=form.cleaned_data['nomeCard']).exists():
+                card = Card(titolo=form.cleaned_data['nomeCard'], descrizione=form.cleaned_data['descCard'], dataScadenza=form.cleaned_data['dataCard'], storyPoint=0)
+                col = Colonna.objects.get(boardParent=board, nome=nomiAssociati[int(form.cleaned_data['colonnaParent'])])
+                print(col.nome)
+                card.colonnaParent = col
+                card.save()
+                return redirect('board_details', board_id=board.id)
+            else:
+                # TODO: modulo di errore vero
+                form.add_error(None, "Card dello stesso nome già presente")
+    else:
+        form = AddCardForm()
+        form.fields['colonnaParent'].choices = colonneAssociate
+    return render(request, "scrumboard_app/add_card.html", {'form': form})
 
 def addUser(request, board_id):
-    pass
+    board = Board.objects.get(id=board_id)
+
+    if auth_check(board, request.user):
+        return redirect('dashboard')
+
+
+    nomiAssociati = [u for u in board.listaUtentiAssociati()]
+    utentiAssociati = zip(range(len(nomiAssociati)), nomiAssociati)
+
+    nomiRegistrati = [u.username for u in ScrumUser.objects.all()]
+
+    for uname in nomiAssociati:
+        if uname in nomiRegistrati:
+            nomiRegistrati.remove(uname)
+
+    utentiRegistrati = zip(range(len(nomiRegistrati)), nomiRegistrati)
+
+    if request.method == "POST":
+        # DeleteUserForm
+        del_form = DeleteUserForm(request.POST)
+        del_form.fields['utentiAssociati'].choices = utentiAssociati
+        if del_form.is_valid() is True and len(del_form.cleaned_data['utentiAssociati']) > 0:
+            print(del_form.cleaned_data['utentiAssociati'])
+            for uid in del_form.cleaned_data['utentiAssociati']:
+                u = ScrumUser.objects.get(username=nomiAssociati[int(uid)])
+                board.utentiAssociati.remove(u)
+            board.save()
+            return redirect('board_details', board_id=board.id)
+        # AddUserForm
+        add_form = AddUserForm(request.POST)
+        add_form.fields['utentiRegistrati'].choices = utentiRegistrati
+        if add_form.is_valid() is True:
+            print(add_form.cleaned_data['utentiRegistrati'])
+            u = ScrumUser.objects.get(username=nomiRegistrati[int(add_form.cleaned_data['utentiRegistrati'])])
+            board.utentiAssociati.add(u)
+            board.save()
+            return redirect('board_details', board_id=board.id)
+    else:
+        del_form = DeleteUserForm(request.POST)
+        del_form.fields['utentiAssociati'].choices = utentiAssociati
+        add_form = AddUserForm(request.POST)
+        add_form.fields['utentiRegistrati'].choices = utentiRegistrati
+    return render(request, "scrumboard_app/add_user.html", {'add_form': add_form, 'del_form': del_form})
 
 def editColumn(request, col_id):
     pass

@@ -6,7 +6,7 @@
                 <button type="submit" style="float: left">Aggiungi Colonna</button>
             </form>
 
-            <form method="GET" action="{% url 'add_card' %}" class="add-card-form">{% csrf_token %}
+            <form method="GET" action="{% url 'add_card' board_id=board.id%}" class="add-card-form">{% csrf_token %}
                 <button type="submit" style="float: left">Aggiungi Card</button>
             </form>
 
