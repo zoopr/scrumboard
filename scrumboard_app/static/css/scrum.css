@@ -6,6 +6,19 @@
   padding: 20px 20px 20px 40px;
 }
 
+.topBar{
+  background-color: #76b852;
+  margin-top: 10px;
+  padding: 20px 20px 20px 20px;
+}
+
+.bodyContent{
+  background-color: #76b852;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 20px 20px 20px 20px;
+}
+
 .page-header h1, .page-header h1 a, .page-header h1 a:visited, .page-header h1 a:active {
   color: #ffffff;
   font-size: 40pt;
@@ -116,6 +129,9 @@ h1, h2, h3, h4 {
 
 .errorlist li {
   list-style-type: none;
+  padding-right: 30pt;
+  color: #EF3B3A;
+  font-weight: bold;
 }
 
 body {
@@ -127,4 +143,77 @@ body {
   font-family: "Roboto", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.button-group button {
+  background-color: #4CAF50; /* Green background */
+  border: 1px solid green; /* Green border */
+  color: white; /* White text */
+  padding: 10px; /* Some padding */
+  cursor: pointer; /* Pointer/hand icon */
+  margin: 10px;
+  width: 200px;
+  text-align: center;
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2), 0 5px 5px 0 rgba(0, 0, 0, 0.24);
+}
+
+/* Clear floats (clearfix hack) */
+.button-group:after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+.button-group button:not(:last-child) {
+  border-right: none; /* Prevent double borders */
+}
+
+/* Add a background color on hover */
+.button-group button:hover {
+  background-color: #3e8e41;
+}
+
+.boardContainer:after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+.boxBoard{
+  background-color: white ;
+  margin: 30px;
+  padding: 40px ;
+  text-align: center;
+  border: 2px solid green;
+  border-radius: 8px;
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2), 0 5px 5px 0 rgba(0, 0, 0, 0.24);
+}
+
+.boxCard{
+  background-color: white ;
+  margin: 30px;
+  padding: 40px ;
+  text-align: center;
+  border: 2px solid green;
+  border-radius: 8px;
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2), 0 5px 5px 0 rgba(0, 0, 0, 0.24);
+}
+
+.boxBoard a, .boxBoard p{
+  color: black;
+  font-size: 22pt;
+}
+
+.boxCard a {
+  font-size: 14pt;
+}
+
+.boxBoard a{
+  font-weight: bold;
+}
+
+.title-page {
+  color: #FFFFFF;
+  text-align: center;
+  font-size: 32pt;
 }

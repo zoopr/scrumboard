@@ -1,13 +1,15 @@
 {% extends 'scrumboard_app/base.html' %}
 
 {% block content %}
-    <div class="login-page">
-      <div class="form">
-        <form method="POST" class="login-form">{% csrf_token %}
-          {{ form.as_p }}
-          <button type="submit">Login</button>
-          <p class="message">Non sei ancora registrato? <a href="{% url 'register' %}">Crea un account</a></p>
-        </form>
-      </div>
+    <div class="container">
+         <div class="login-page">
+              <div class="form">
+                  <form method="POST" class="login-form">{% csrf_token %}
+                      {{ form.as_p }}
+                      <button type="submit">Login</button>
+                      <p class="message">Non sei ancora registrato? <a href="{% url 'register' %}">Crea un account</a></p>
+                  </form>
+              </div>
+         </div>
     </div>
 {% endblock %}

@@ -1,30 +1,42 @@
 {% extends 'scrumboard_app/base.html' %}
 {% block content %}
-    <form method="GET" action="{% url 'add_column' %}" class="add-column-form">{% csrf_token %}
-    <button type="submit">Aggiungi Colonna</button>
-    </form>
+    <div class="topBar">
+        <div class="button-group">
+            <form method="GET" action="{% url 'add_column' %}" class="add-column-form">{% csrf_token %}
+                <button type="submit" style="float: left">Aggiungi Colonna</button>
+            </form>
 
-    <form method="GET" action="{% url 'add_card' %}" class="add-card-form">{% csrf_token %}
-    <button type="submit">Aggiungi Card</button>
-    </form>
+            <form method="GET" action="{% url 'add_card' %}" class="add-card-form">{% csrf_token %}
+                <button type="submit" style="float: left">Aggiungi Card</button>
+            </form>
 
-    <form method="GET" action="{% url 'add_user' board_id=board.id%}" class="add-user-form">{% csrf_token %}
-    <button type="submit">Aggiungi Utente</button>
-    </form>
+            <form method="GET" action="{% url 'add_user' board_id=board.id%}" class="add-user-form">{% csrf_token %}
+                <button type="submit" style="float: left">Aggiungi Utente</button>
+            </form>
 
-    <form method="GET" action="{% url 'burndown' board_id=board.id%}" class="burndown-form">{% csrf_token %}
-    <button type="submit">Burndown</button>
-    </form>
+            <form method="GET" action="{% url 'burndown' board_id=board.id%}" class="burndown-form">{% csrf_token %}
+                <button type="submit" style="float: left">Burndown</button>
+            </form>
 
-    <form method="POST" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}
-    <button type="submit">Logout</button>
-    </form>
+            <form method="POST" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}
+                <button type="submit" style="float: right">Logout</button>
+            </form>
+        </div>
+    </div>
 
-    <h1>{{ board.nome }}</h1>
-    {% for colonna in board.colonne %}
-        <a href="{% url 'edit_column' col_id=colonna.id %}">{{ colonna.nome }}</a>
-        {% for card in colonna.cards %}
-            <a href="{% url 'edit_card' card_id=card.id %}">{{ card.nome }}</a>
-        {% endfor %}
-    {% endfor %}
+    <div class="bodyContent">
+        <h1 class="title-page">{{ board.nome }}</h1>
+        <div class="boardContainer">
+            {% for colonna in board.colonne %}
+                <div class="boxBoard" style="float: left">
+                    <a href="{% url 'edit_column' col_id=colonna.id %}">{{ colonna.nome }}</a>
+                    {% for card in colonna.cards %}
+                        <div class="boxCard">
+                            <a href="{% url 'edit_card' card_id=card.id %}">{{ card.nome }}</a>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
 {% endblock %}
