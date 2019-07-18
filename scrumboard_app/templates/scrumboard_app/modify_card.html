@@ -1,0 +1,25 @@
+{% extends 'scrumboard_app/base.html' %}
+
+{% block content %}
+    <div class="bodyContent">
+        <h1 class="title-page">Modifica Card</h1>
+        <div class="container">
+            <div class="login-page">
+                <div class="form">
+                    <form method="POST" class="modify-card-form">{% csrf_token %}
+                        {{ field_form.as_p }}
+                        <button type="submit">Salva</button>
+                    </form>
+                    <form method="POST" class="add-user-form">{% csrf_token %}
+                        {{ add_user_form.as_p }}
+                        <button type="submit">Aggiungi Utente</button>
+                    </form>
+                    <form method="POST" class="del-user-form">{% csrf_token %}
+                        {{ del_user_form.as_p }}
+                        <button type="submit">Rimuovi Utente</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

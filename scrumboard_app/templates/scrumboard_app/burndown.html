@@ -1,0 +1,27 @@
+{% extends 'scrumboard_app/base.html' %}
+{% block content %}
+    <div class="topBar">
+        <div class="button-group">
+            <form method="POST" action="{% url 'logout' %}" class="logout-form">{% csrf_token %}
+                <button type="submit" class="button-topBar" style="float: right">Logout</button>
+            </form>
+        </div>
+    </div>
+
+
+    <div class="bodyContent">
+        <h1 class="title-page">Burndown</h1>
+        <div class="boardContainer">
+            <p>Numero di Card: {{ attrs.cardNum }}</p>
+            <p>Numero di Card per ogni colonna:</p>
+             {% for colonna in attrs.colonne %}
+                <div class="boxBoard" style="float: left">
+                    <p>{{ colonna.nome }}</p>
+                    <p>{{ colonna.cardNum }}</p>
+                </div>
+            {% endfor %}
+            <p>Numero di Card scadute: {{ attrs.scadute }}</p>
+            <p>Numero di Punti Storia Utilizzati: {{ attrs.ps }}</p>
+        </div>
+    </div>
+{% endblock %}

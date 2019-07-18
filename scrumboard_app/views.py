@@ -4,6 +4,8 @@ from django.contrib import messages
 from .forms import *
 from .models import *
 
+import datetime
+
 # Create your views here.
 def auth_check(board, user):
     for u in board.listaUtentiAssociati():
@@ -100,11 +102,38 @@ def registerView(request):
 
 
 def burndown(request, board_id):
-    board = Board.objects.get(id=board_id)
+    b = Board.objects.get(id=board_id)
 
-    if auth_check(board, request.user) is False:
+    if auth_check(b, request.user) is False:
         return redirect('index')
 
+    # Genera attributi
+    cardNum = 0
+    colonne = []
+    scadute = 0
+    ps= 0
+
+    for colonna in b.getColonneBoard():
+
+        cards = colonna.getCardColonna().all()
+        dict = {
+            'nome': colonna.nome,
+            'cardNum': len(cards)
+        }
+        cardNum += len(cards)
+        for card in cards:
+            if card.dataScadenza < datetime.date.today():
+                scadute +=1
+            ps += card.storyPoint
+        colonne.append(dict)
+
+    attrs = {
+        'cardNum': cardNum,
+        'colonne': colonne,
+        'scadute': scadute,
+        'ps': ps
+    }
+    return render(request, "scrumboard_app/burndown.html", {'attrs': attrs})
 
 def board_details(request, board_id):
     b = Board.objects.get(id=board_id)
@@ -148,7 +177,7 @@ def addColumn(request):
                 return redirect('board_details', board_id=b.id)
             else:
                 # TODO: modulo di errore vero
-                form.add_error(None, "Colonna dello stesso nome già presente")
+                form.add_error(None, "Colonna dello stesso nome già presente nella board")
     else:
         form = AddColumnForm()
         form.fields['boardParent'].choices = boardAssociate
@@ -158,7 +187,6 @@ def addColumn(request):
 
 def addCard(request, board_id):
     board = Board.objects.get(id=board_id)
-
 
     if auth_check(board, request.user) is False:
         return redirect('index')
@@ -175,10 +203,12 @@ def addCard(request, board_id):
                 print(col.nome)
                 card.colonnaParent = col
                 card.save()
+                card.utentiCard.add(request.user)
+                card.save()
                 return redirect('board_details', board_id=board.id)
             else:
                 # TODO: modulo di errore vero
-                form.add_error(None, "Card dello stesso nome già presente")
+                form.add_error(None, "Card dello stesso nome già presente nella board")
     else:
         form = AddCardForm()
         form.fields['colonnaParent'].choices = colonneAssociate
@@ -216,7 +246,7 @@ def addUser(request, board_id):
         # AddUserForm
         add_form = AddUserForm(request.POST)
         add_form.fields['utentiRegistrati'].choices = utentiRegistrati
-        if add_form.is_valid() is True:
+        if add_form.is_valid() is True and len(add_form.cleaned_data['utentiRegistrati']) > 0:
             print(add_form.cleaned_data['utentiRegistrati'])
             u = ScrumUser.objects.get(username=nomiRegistrati[int(add_form.cleaned_data['utentiRegistrati'])])
             board.utentiAssociati.add(u)
@@ -229,8 +259,131 @@ def addUser(request, board_id):
         add_form.fields['utentiRegistrati'].choices = utentiRegistrati
     return render(request, "scrumboard_app/add_user.html", {'add_form': add_form, 'del_form': del_form})
 
-def editColumn(request, col_id):
-    pass
+def editColumn(request, board_id, col_name):
+    board = Board.objects.get(id=board_id)
+    colonna = board.getColonneBoard().get(nome=col_name)
 
-def editCard(request, card_id):
-    pass
+    if auth_check(board, request.user) is False:
+        return redirect('index')
+
+    # Generare lista per la rimozione di card nella colonna
+    nomiCard = [c.titolo for c in colonna.getCardColonna()]
+    cardAssociate = zip(range(len(nomiCard)), nomiCard)
+
+    # Generare lista per l'aggiunta di card esistenti nella board, non già appartenenti alla colonna
+    nomiCardBoard = []
+    for col in board.getColonneBoard():
+        nomiCardBoard.extend([c.titolo for c in col.getCardColonna()])
+    for cardPresente in nomiCard:
+        if cardPresente in nomiCardBoard:
+            nomiCardBoard.remove(cardPresente)
+    cardBoard = zip(range(len(nomiCardBoard)), nomiCardBoard)
+
+    if request.method == "POST":
+        # field_form
+        field_form = ModifyColumnForm(request.POST)
+        if field_form.is_valid() is True:
+            if not board.getColonneBoard().filter(nome=field_form.cleaned_data['nomeColonna']).exists():
+                colonna.nome = field_form.cleaned_data['nomeColonna']
+                colonna.save()
+                return redirect('board_details', board_id=board.id)
+            else:
+                field_form.add_error(None, "Colonna dallo stesso nome già presente nella board")
+        # add_card_form
+        add_card_form = AddCardToColForm(request.POST)
+        add_card_form.fields['cardEsistenti'].choices = cardBoard
+        if add_card_form.is_valid() is True and len(add_card_form.cleaned_data['cardEsistenti']) > 0:
+            # Estrai card, setta colonna parent come quella corrente.
+            titolo = nomiCardBoard[int(add_card_form.cleaned_data['cardEsistenti'])]
+            print(titolo)
+            card = Card.objects.get(colonnaParent__in=board.getColonneBoard(), titolo=titolo)
+            card.colonnaParent = colonna
+            card.save()
+            return redirect('board_details', board_id=board.id)
+        # del_card_board
+        del_card_form = DeleteCardForm(request.POST)
+        del_card_form.fields['cardAssociate'].choices = cardAssociate
+        if del_card_form.is_valid() is True and len(del_card_form.cleaned_data['cardAssociate']) > 0:
+            titolo=nomiCard[int(del_card_form.cleaned_data['cardAssociate'])]
+            print(titolo)
+            card = colonna.getCardColonna().get(titolo=titolo)
+            card.delete()
+            return redirect('board_details', board_id=board.id)
+    else:
+        field_form = ModifyColumnForm()
+        field_form.initial['nomeColonna'] = colonna.nome
+        add_card_form = AddCardToColForm()
+        add_card_form.fields['cardEsistenti'].choices = cardBoard
+        del_card_form = DeleteCardForm()
+        del_card_form.fields['cardAssociate'].choices = cardAssociate
+    return render(request, "scrumboard_app/modify_column.html", {'field_form': field_form, 'add_card_form': add_card_form, 'del_card_form': del_card_form})
+
+def editCard(request, board_id, col_name, card_name):
+    board = Board.objects.get(id=board_id)
+    colonna = board.getColonneBoard().get(nome=col_name)
+    card = colonna.getCardColonna().get(titolo=card_name)
+
+    if auth_check(board, request.user) is False:
+        return redirect('index')
+
+    # Generare lista di colonne a cui la card può essere aggiunta
+    nomiColonne = [c.nome for c in board.getColonneBoard()]
+    colonneParent = zip(range(len(nomiColonne)), nomiColonne)
+
+    # Generare lista per la rimozione di utenti dal task della card
+    nomiUtenti = [u.username for u in card.utentiCard.all()]
+    utentiAssociati = zip(range(len(nomiUtenti)), nomiUtenti)
+
+    # Generare lista per l'aggiunta di utenti registrati non partecipanti alla card.
+    nomiUtentiNonAssociati = [u.username for u in ScrumUser.objects.all()]
+    for utente in nomiUtenti:
+        if utente in nomiUtentiNonAssociati:
+            nomiUtentiNonAssociati.remove(utente)
+    utentiNonAssociati = zip(range(len(nomiUtentiNonAssociati)), nomiUtentiNonAssociati)
+
+    if request.method == "POST":
+        # field_form
+        field_form = ModifyCardForm(request.POST)
+        field_form.fields['colonnaParent'].choices = colonneParent
+        if field_form.is_valid() is True:
+            if not Card.objects.filter(colonnaParent__in=board.getColonneBoard(), titolo=field_form.cleaned_data['nomeCard']).exclude(id=card.id).exists():
+                card.titolo = field_form.cleaned_data['nomeCard']
+                card.descrizione = field_form.cleaned_data['descCard']
+                card.storyPoint = field_form.cleaned_data['storyPoint']
+                card.dataScadenza = field_form.cleaned_data['dataCard']
+                card.colonnaParent = board.getColonneBoard().get(nome=nomiColonne[int(field_form.cleaned_data['colonnaParent'])])
+                card.save()
+                return redirect('board_details', board_id=board.id)
+            else:
+                field_form.add_error(None, "Card dello stesso nome già presente nella board")
+        # add_user_form
+        add_user_form = AddUserForm(request.POST)
+        add_user_form.fields['utentiRegistrati'].choices = utentiNonAssociati
+        if add_user_form.is_valid() is True and len(add_user_form.cleaned_data['utentiRegistrati']) > 0:
+            user = ScrumUser.objects.get(username=nomiUtentiNonAssociati[int(add_user_form.cleaned_data['utentiRegistrati'])])
+            card.utentiCard.add(user)
+            card.save()
+            return redirect('board_details', board_id=board.id)
+        # del_user_form
+        del_user_form = DeleteUserForm(request.POST)
+        del_user_form.fields['utentiAssociati'].choices = utentiAssociati
+        if del_user_form.is_valid() is True and len(del_user_form.cleaned_data['utentiAssociati']) > 0:
+            for id in del_user_form.cleaned_data['utentiAssociati']:
+                user = ScrumUser.objects.get(username=nomiUtenti[int(id)])
+                card.utentiCard.remove(user)
+                card.save()
+            return redirect('board_details', board_id=board.id)
+    else:
+        field_form = ModifyCardForm()
+        field_form.fields['colonnaParent'].choices = colonneParent
+        # Set valori correnti come default
+        field_form.initial['nomeCard'] = card.titolo
+        field_form.initial['descCard'] = card.descrizione
+        field_form.initial['dataCard'] = card.dataScadenza
+        field_form.initial['storyPoint'] = card.storyPoint
+        field_form.initial['colonnaParent'] = nomiColonne.index(card.colonnaParent.nome)
+        add_user_form = AddUserForm()
+        add_user_form.fields['utentiRegistrati'].choices = utentiNonAssociati
+        del_user_form = DeleteUserForm()
+        del_user_form.fields['utentiAssociati'].choices = utentiAssociati
+    return render(request, "scrumboard_app/modify_card.html", {'field_form': field_form, 'add_user_form': add_user_form, 'del_user_form': del_user_form})

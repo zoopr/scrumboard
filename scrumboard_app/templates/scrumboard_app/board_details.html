@@ -29,10 +29,10 @@
         <div class="boardContainer">
             {% for colonna in board.colonne %}
                 <div class="boxBoard" style="float: left">
-                    <a href="{% url 'edit_column' col_id=colonna.id %}">{{ colonna.nome }}</a>
+                    <a href="{% url 'edit_column' board_id=board.id col_name=colonna.nome %}">{{ colonna.nome }}</a>
                     {% for card in colonna.cards %}
                         <div class="boxCard">
-                            <a href="{% url 'edit_card' card_id=card.id %}">{{ card.nome }}</a>
+                            <a href="{% url 'edit_card' board_id=board.id col_name=colonna.nome card_name=card.nome %}">{{ card.nome }}</a>
                         </div>
                     {% endfor %}
                 </div>
