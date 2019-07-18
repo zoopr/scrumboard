@@ -6,13 +6,9 @@ from .models import *
 
 # Create your views here.
 def auth_check(board, user):
-    # C'è qualcosa di sbagliato nel check.
-    '''
     for u in board.listaUtentiAssociati():
-        if user.username == u:
-            return False
-    return True
-    '''
+        if user.username == u.username:
+            return True
     return False
 
 def index(request):
@@ -106,16 +102,15 @@ def registerView(request):
 def burndown(request, board_id):
     board = Board.objects.get(id=board_id)
 
-    if auth_check(board, request.user):
-        return redirect('dashboard')
+    if auth_check(board, request.user) is False:
+        return redirect('index')
 
 
 def board_details(request, board_id):
     b = Board.objects.get(id=board_id)
 
-    if auth_check(b, request.user):
-        print("AUTH FAIL")
-        return redirect('dashboard')
+    if auth_check(b, request.user) is False:
+        return redirect('index')
 
     attrs = {
         'id': board_id,
@@ -165,8 +160,8 @@ def addCard(request, board_id):
     board = Board.objects.get(id=board_id)
 
 
-    if auth_check(board, request.user):
-        return redirect('dashboard')
+    if auth_check(board, request.user) is False:
+        return redirect('index')
 
     nomiAssociati = [c.nome for c in board.getColonneBoard()]
     colonneAssociate = zip(range(len(nomiAssociati)), nomiAssociati)
@@ -192,8 +187,8 @@ def addCard(request, board_id):
 def addUser(request, board_id):
     board = Board.objects.get(id=board_id)
 
-    if auth_check(board, request.user):
-        return redirect('dashboard')
+    if auth_check(board, request.user) is False:
+        return redirect('index')
 
 
     nomiAssociati = [u for u in board.listaUtentiAssociati()]
