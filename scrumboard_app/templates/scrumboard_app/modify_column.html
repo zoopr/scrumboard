@@ -10,10 +10,12 @@
                         {{ field_form.as_p }}
                         <button type="submit">Salva</button>
                     </form>
+                    <br>
                     <form method="POST" class="add-card-form">{% csrf_token %}
                         {{ add_card_form.as_p }}
                         <button type="submit">Aggiungi Card</button>
                     </form>
+                    <br>
                     <form method="POST" class="del-card-form">{% csrf_token %}
                         {{ del_card_form.as_p }}
                         <button type="submit">Rimuovi Card</button>
