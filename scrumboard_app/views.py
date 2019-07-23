@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
-from django.contrib import messages
 from .forms import *
 from .models import *
 
@@ -109,7 +108,7 @@ def burndown(request, board_id):
     if auth_check(b, request.user) is False:
         return redirect('index')
 
-    # Genera attributi
+    # Generate attributes
     cardNum = 0
     colonne = []
     scadute = 0
@@ -118,6 +117,7 @@ def burndown(request, board_id):
     for colonna in b.getColonneBoard():
 
         cards = colonna.getCardColonna().all()
+        #column-specific object
         dict = {
             'nome': colonna.nome,
             'cardNum': len(cards)
@@ -128,7 +128,7 @@ def burndown(request, board_id):
                 scadute +=1
             ps += card.storyPoint
         colonne.append(dict)
-
+    # board-specific object
     attrs = {
         'cardNum': cardNum,
         'colonne': colonne,
@@ -143,6 +143,7 @@ def board_details(request, board_id):
     if auth_check(b, request.user) is False:
         return redirect('index')
 
+    # Generate attribute dictionaries
     attrs = {
         'id': board_id,
         'nome':b.nome,
@@ -203,7 +204,10 @@ def addCard(request, board_id):
         form.fields['colonnaParent'].choices = colonneAssociate
         if form.is_valid() is True:
             # Only allow creating a new card if there isn't one with the same name on the board.
-            if not Card.objects.filter(colonnaParent__in=board.getColonneBoard(), titolo=form.cleaned_data['nomeCard']).exists():
+            listaCard = []
+            for col in board.getColonneBoard():
+                listaCard.extend([card.titolo for card in col.getCardColonna()])
+            if not form.cleaned_data['nomeCard'] in listaCard:
                 card = Card(titolo=form.cleaned_data['nomeCard'], descrizione=form.cleaned_data['descCard'], dataScadenza=form.cleaned_data['dataCard'], storyPoint=0)
                 col = board.getColonneBoard().get(nome=nomiAssociati[int(form.cleaned_data['colonnaParent'])])
                 card.colonnaParent = col
@@ -308,10 +312,13 @@ def editColumn(request, board_id, col_name):
         add_card_form = AddCardToColForm(request.POST)
         add_card_form.fields['cardEsistenti'].choices = cardBoard
         if add_card_form.is_valid() is True and len(add_card_form.cleaned_data['cardEsistenti']) > 0:
-            # Set card parent as current column.
+            # Fetch correct card, and set card parent as current column.
             titolo = nomiCardBoard[int(add_card_form.cleaned_data['cardEsistenti'])]
-            print(titolo)
-            card = Card.objects.get(colonnaParent__in=board.getColonneBoard(), titolo=titolo)
+            for col in board.getColonneBoard():
+                if col.getCardColonna().filter(titolo=titolo).exists():
+                    card = col.getCardColonna().get(titolo=titolo)
+                    break
+                    # This card will always exist.
             card.colonnaParent = colonna
             card.save()
             success = True
@@ -319,8 +326,8 @@ def editColumn(request, board_id, col_name):
         del_card_form = DeleteCardForm(request.POST)
         del_card_form.fields['cardAssociate'].choices = cardAssociate
         if del_card_form.is_valid() is True and len(del_card_form.cleaned_data['cardAssociate']) > 0:
+            # Delete card in this column
             titolo=nomiCard[int(del_card_form.cleaned_data['cardAssociate'])]
-            print(titolo)
             card = colonna.getCardColonna().get(titolo=titolo)
             card.delete()
             success = True
@@ -367,7 +374,11 @@ def editCard(request, board_id, col_name, card_name):
         field_form.fields['colonnaParent'].choices = colonneParent
         if field_form.is_valid() is True:
             # IF there is a card on the board with the same name (except itself), fail.
-            if not Card.objects.filter(colonnaParent__in=board.getColonneBoard(), titolo=field_form.cleaned_data['nomeCard']).exclude(id=card.id).exists():
+            listaCard = []
+            for col in board.getColonneBoard():
+                listaCard.extend([card.titolo for card in col.getCardColonna().exclude(id=card.id)])
+            if not field_form.cleaned_data['nomeCard'] in listaCard:
+                # Update card info.
                 card.titolo = field_form.cleaned_data['nomeCard']
                 card.descrizione = field_form.cleaned_data['descCard']
                 card.storyPoint = field_form.cleaned_data['storyPoint']
