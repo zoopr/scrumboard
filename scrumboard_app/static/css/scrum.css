@@ -191,15 +191,17 @@ body {
   border: 2px solid green;
   border-radius: 8px;
   box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2), 0 5px 5px 0 rgba(0, 0, 0, 0.24);
+  min-height: 150px;
+  min-width: 200px;
 }
 
 .boxCard{
-  background-color: white ;
   margin: 30px;
   padding: 40px ;
   text-align: center;
   border: 2px solid green;
   border-radius: 8px;
+  background-color: palegreen;
   box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2), 0 5px 5px 0 rgba(0, 0, 0, 0.24);
 }
 
@@ -220,4 +222,18 @@ body {
   color: #FFFFFF;
   text-align: center;
   font-size: 32pt;
+}
+
+table, th, td {
+  border: 2px solid green;
+  border-collapse: collapse;
+  border-radius: 8px;
+  margin: 0 auto;
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2), 0 5px 5px 0 rgba(0, 0, 0, 0.24);
+}
+th, td {
+  padding: 20px;
+  text-align: center;
+  font-size: 14pt;
+  background-color: #FFFFFF;
 }

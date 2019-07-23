@@ -12,16 +12,34 @@
     <div class="bodyContent">
         <h1 class="title-page">Burndown</h1>
         <div class="boardContainer">
-            <p>Numero di Card: {{ attrs.cardNum }}</p>
-            <p>Numero di Card per ogni colonna:</p>
-             {% for colonna in attrs.colonne %}
-                <div class="boxBoard" style="float: left">
-                    <p>{{ colonna.nome }}</p>
-                    <p>{{ colonna.cardNum }}</p>
-                </div>
-            {% endfor %}
-            <p>Numero di Card scadute: {{ attrs.scadute }}</p>
-            <p>Numero di Punti Storia Utilizzati: {{ attrs.ps }}</p>
+            <table style="width:80%">
+                <tr>
+                    <th>Numero di Card per ogni Colonna:</th>
+                    {% for colonna in attrs.colonne %}
+                        <td>
+                            <p>{{ colonna.nome }}: {{ colonna.cardNum }} </p>
+                        </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <th>Numero di Card della Board:</th>
+                    <td>
+                        <p>{{ attrs.cardNum }}</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Numero di Card Scadute:</th>
+                    <td>
+                        <p>{{ attrs.scadute }}</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Numero di Punti Storia Utilizzati:</th>
+                    <td>
+                        <p>{{ attrs.ps }}</p>
+                    </td>
+                </tr>
+            </table>
         </div>
     </div>
 {% endblock %}

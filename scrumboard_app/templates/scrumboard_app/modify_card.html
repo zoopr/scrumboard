@@ -10,10 +10,12 @@
                         {{ field_form.as_p }}
                         <button type="submit">Salva</button>
                     </form>
+                    <br>
                     <form method="POST" class="add-user-form">{% csrf_token %}
                         {{ add_user_form.as_p }}
                         <button type="submit">Aggiungi Utente</button>
                     </form>
+                    <br>
                     <form method="POST" class="del-user-form">{% csrf_token %}
                         {{ del_user_form.as_p }}
                         <button type="submit">Rimuovi Utente</button>
