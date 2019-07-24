@@ -182,9 +182,7 @@ def addColumn(request):
             # If the parent board doesn't have a column with the same name, create and save object.
             b = Board.objects.get(nome=nomiAssociati[int(form.cleaned_data['boardParent'])])
             if not b.getColonneBoard().filter(nome=form.cleaned_data['nomeColonna']).exists():
-                c = Colonna(nome=form.cleaned_data['nomeColonna'])
-                c.boardParent = b
-                c.save()
+                b.creaColonna(form.cleaned_data['nomeColonna'])
                 return redirect('board_details', board_id=b.id)
             else:
                 form.add_error(None, "Colonna dello stesso nome già presente nella board")
@@ -214,13 +212,9 @@ def addCard(request, board_id):
             for col in board.getColonneBoard():
                 listaCard.extend([card.titolo for card in col.getCardColonna()])
             if not form.cleaned_data['nomeCard'] in listaCard:
-                card = Card(titolo=form.cleaned_data['nomeCard'], descrizione=form.cleaned_data['descCard'],
-                            dataScadenza=form.cleaned_data['dataCard'], storyPoint=0)
                 col = board.getColonneBoard().get(nome=nomiAssociati[int(form.cleaned_data['colonnaParent'])])
-                card.colonnaParent = col
-                card.save()
-                card.utentiCard.add(request.user)
-                card.save()
+                col.creaCard(form.cleaned_data['nomeCard'], form.cleaned_data['descCard'],
+                             form.cleaned_data['dataCard'], 0, [request.user])
                 return redirect('board_details', board_id=board.id)
             else:
                 form.add_error(None, "Card dello stesso nome già presente nella board")
@@ -310,8 +304,7 @@ def editColumn(request, board_id, col_name):
         if field_form.is_valid() is True:
             # Only edit if column name is unique in the board.
             if not board.getColonneBoard().filter(nome=field_form.cleaned_data['nomeColonna']).exists():
-                colonna.nome = field_form.cleaned_data['nomeColonna']
-                colonna.save()
+                board.modificaColonna(colonna.nome, field_form.cleaned_data['nomeColonna'])
                 success = True
             else:
                 field_form.add_error(None, "Colonna dallo stesso nome già presente nella board")
@@ -323,11 +316,9 @@ def editColumn(request, board_id, col_name):
             titolo = nomiCardBoard[int(add_card_form.cleaned_data['cardEsistenti'])]
             for col in board.getColonneBoard():
                 if col.getCardColonna().filter(titolo=titolo).exists():
-                    card = col.getCardColonna().get(titolo=titolo)
+                    board.muoviCard(col.nome, colonna.nome, titolo)
                     break
                     # This card will always exist.
-            card.colonnaParent = colonna
-            card.save()
             success = True
         # del_card_board
         del_card_form = DeleteCardForm(request.POST)
@@ -335,8 +326,7 @@ def editColumn(request, board_id, col_name):
         if del_card_form.is_valid() is True and len(del_card_form.cleaned_data['cardAssociate']) > 0:
             # Delete card in this column
             titolo = nomiCard[int(del_card_form.cleaned_data['cardAssociate'])]
-            card = colonna.getCardColonna().get(titolo=titolo)
-            card.delete()
+            colonna.eliminaCard(titolo)
             success = True
         if success is True:
             # If at least one of these operations was taken successfully, return to board details.
@@ -388,10 +378,12 @@ def editCard(request, board_id, col_name, card_name):
                 listaCard.extend([card.titolo for card in col.getCardColonna().exclude(id=card.id)])
             if not field_form.cleaned_data['nomeCard'] in listaCard:
                 # Update card info.
-                card.titolo = field_form.cleaned_data['nomeCard']
-                card.descrizione = field_form.cleaned_data['descCard']
-                card.storyPoint = field_form.cleaned_data['storyPoint']
-                card.dataScadenza = field_form.cleaned_data['dataCard']
+                colonna.modificaCard(card.titolo, field_form.cleaned_data['nomeCard'],
+                                     field_form.cleaned_data['descCard'], field_form.cleaned_data['dataCard'],
+                                     field_form.cleaned_data['storyPoint'])
+
+                # Reload card
+                card = colonna.getCardColonna().get(titolo=card_name)
                 card.colonnaParent = board.getColonneBoard()\
                     .get(nome=nomiColonne[int(field_form.cleaned_data['colonnaParent'])])
                 card.save()

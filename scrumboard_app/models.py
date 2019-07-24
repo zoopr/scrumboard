@@ -19,10 +19,6 @@ class Board(models.Model):
         c = Colonna(boardParent=self, nome=col_name)
         c.save()
 
-    def eliminaColonna(self, col_name):
-        c = Colonna.objects.get(boardParent=self, nome=col_name)
-        c.delete()
-
     def modificaColonna(self, col_name, new_name):
         c = Colonna.objects.get(boardParent=self, nome=col_name)
         c.nome = new_name
@@ -57,19 +53,16 @@ class Colonna(models.Model):
         c.save()
 
     def eliminaCard(self, card_name):
-        c = Card.objects.get(colonnaParent=self, nome=card_name)
+        c = Card.objects.get(colonnaParent=self, titolo=card_name)
         c.delete()
 
-    def modificaCard(self, prev_titolo, card_titolo, card_desc, card_data, card_story, card_utenti):
+    def modificaCard(self, prev_titolo, card_titolo, card_desc, card_data, card_story):
         c = Card.objects.get(colonnaParent=self, titolo=prev_titolo)
         c.titolo = card_titolo
         c.descrizione = card_desc
         c.dataScadenza = card_data
-        c.storyPoint = card_story
-        # Resetta e aggiungi solo gli utenti sulla lista.
-        c.utentiCard.clear()
-        for user in card_utenti:
-            c.utentiCard.add(user)
+        c.storyPoint = int(card_story)
+        print(card_story)
         c.save()
 
 
