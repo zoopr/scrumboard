@@ -5,6 +5,7 @@ from .models import *
 
 import datetime
 
+
 # Create your views here.
 def auth_check(board, user):
     for u in board.listaUtentiAssociati():
@@ -12,12 +13,14 @@ def auth_check(board, user):
             return True
     return False
 
+
 # Landing page. Check if a valid session cookie exists, prompt to login if it doesn't
 def index(request):
     if request.user.is_authenticated:  # Redirect se l'utente è loggato
         return redirect('dashboard')
     else:
         return redirect('login')
+
 
 # Main page for authenticated user. Lists all Boards owned by the user.
 def dashboard(request):
@@ -40,8 +43,10 @@ def dashboard(request):
     else:
         return redirect('login')
 
+
 def loginView(request):
     if request.method == "POST":
+        # If form is valid, check inserted data
         form = LoginForm(request.POST)
         if form.is_valid() is True:
             un = form.cleaned_data['username']
@@ -51,7 +56,6 @@ def loginView(request):
                 login(request, user)
                 return redirect('index')
             else:
-                # TODO: modulo di errore vero
                 form.add_error(None, "Errore di autenticazione")
     else:
         form = LoginForm()
@@ -67,14 +71,14 @@ def addBoard(request):
     if request.method == "POST":
         form = BoardForm(request.POST)
         if form.is_valid() is True:
-            if not Board.objects.filter(nome= form.cleaned_data['nomeBoard']).exists() :
+            # Add board only if name is not already present
+            if not Board.objects.filter(nome=form.cleaned_data['nomeBoard']).exists():
                 b = Board(nome=form.cleaned_data['nomeBoard'])
                 b.save()
                 b.utentiAssociati.add(request.user)
                 b.save()
                 return redirect('dashboard')
             else:
-                # TODO: modulo di errore vero
                 form.add_error(None, "Board dallo stesso nome già presente")
     else:
         form = BoardForm()
@@ -84,7 +88,9 @@ def addBoard(request):
 def registerView(request):
     if request.method == "POST":
         form = RegisterForm(request.POST)
-        if form.is_valid() and form.cleaned_data['password'] == form.cleaned_data['conferma_password'] and not ScrumUser.objects.filter(username = form.cleaned_data['username']).exists():
+        if form.is_valid() and form.cleaned_data['password'] == form.cleaned_data['conferma_password'] \
+                and not ScrumUser.objects.filter(username=form.cleaned_data['username']).exists():
+            # Add new user on unique username and correctly inserted password
             user = ScrumUser()
             user.username = form.cleaned_data['username']
             user.set_password(form.cleaned_data['password'])
@@ -101,7 +107,6 @@ def registerView(request):
     return render(request, "scrumboard_app/register.html", {'form': form})
 
 
-
 def burndown(request, board_id):
     b = Board.objects.get(id=board_id)
 
@@ -112,22 +117,22 @@ def burndown(request, board_id):
     cardNum = 0
     colonne = []
     scadute = 0
-    ps= 0
+    ps = 0
 
     for colonna in b.getColonneBoard():
 
         cards = colonna.getCardColonna().all()
-        #column-specific object
-        dict = {
+        # Column-specific object
+        colDict = {
             'nome': colonna.nome,
             'cardNum': len(cards)
         }
         cardNum += len(cards)
         for card in cards:
             if card.dataScadenza < datetime.date.today():
-                scadute +=1
+                scadute += 1
             ps += card.storyPoint
-        colonne.append(dict)
+        colonne.append(colDict)
     # board-specific object
     attrs = {
         'cardNum': cardNum,
@@ -136,6 +141,7 @@ def burndown(request, board_id):
         'ps': ps
     }
     return render(request, "scrumboard_app/burndown.html", {'attrs': attrs})
+
 
 def board_details(request, board_id):
     b = Board.objects.get(id=board_id)
@@ -146,7 +152,7 @@ def board_details(request, board_id):
     # Generate attribute dictionaries
     attrs = {
         'id': board_id,
-        'nome':b.nome,
+        'nome': b.nome,
         'colonne': []
     }
     for col in b.getColonneBoard():
@@ -175,7 +181,7 @@ def addColumn(request):
         if form.is_valid() is True:
             # If the parent board doesn't have a column with the same name, create and save object.
             b = Board.objects.get(nome=nomiAssociati[int(form.cleaned_data['boardParent'])])
-            if not b.getColonneBoard().filter(nome= form.cleaned_data['nomeColonna']).exists():
+            if not b.getColonneBoard().filter(nome=form.cleaned_data['nomeColonna']).exists():
                 c = Colonna(nome=form.cleaned_data['nomeColonna'])
                 c.boardParent = b
                 c.save()
@@ -208,7 +214,8 @@ def addCard(request, board_id):
             for col in board.getColonneBoard():
                 listaCard.extend([card.titolo for card in col.getCardColonna()])
             if not form.cleaned_data['nomeCard'] in listaCard:
-                card = Card(titolo=form.cleaned_data['nomeCard'], descrizione=form.cleaned_data['descCard'], dataScadenza=form.cleaned_data['dataCard'], storyPoint=0)
+                card = Card(titolo=form.cleaned_data['nomeCard'], descrizione=form.cleaned_data['descCard'],
+                            dataScadenza=form.cleaned_data['dataCard'], storyPoint=0)
                 col = board.getColonneBoard().get(nome=nomiAssociati[int(form.cleaned_data['colonnaParent'])])
                 card.colonnaParent = col
                 card.save()
@@ -327,7 +334,7 @@ def editColumn(request, board_id, col_name):
         del_card_form.fields['cardAssociate'].choices = cardAssociate
         if del_card_form.is_valid() is True and len(del_card_form.cleaned_data['cardAssociate']) > 0:
             # Delete card in this column
-            titolo=nomiCard[int(del_card_form.cleaned_data['cardAssociate'])]
+            titolo = nomiCard[int(del_card_form.cleaned_data['cardAssociate'])]
             card = colonna.getCardColonna().get(titolo=titolo)
             card.delete()
             success = True
@@ -342,7 +349,9 @@ def editColumn(request, board_id, col_name):
         add_card_form.fields['cardEsistenti'].choices = cardBoard
         del_card_form = DeleteCardForm()
         del_card_form.fields['cardAssociate'].choices = cardAssociate
-    return render(request, "scrumboard_app/modify_column.html", {'field_form': field_form, 'add_card_form': add_card_form, 'del_card_form': del_card_form})
+    return render(request, "scrumboard_app/modify_column.html",
+                  {'field_form': field_form, 'add_card_form': add_card_form, 'del_card_form': del_card_form})
+
 
 def editCard(request, board_id, col_name, card_name):
     board = Board.objects.get(id=board_id)
@@ -383,7 +392,8 @@ def editCard(request, board_id, col_name, card_name):
                 card.descrizione = field_form.cleaned_data['descCard']
                 card.storyPoint = field_form.cleaned_data['storyPoint']
                 card.dataScadenza = field_form.cleaned_data['dataCard']
-                card.colonnaParent = board.getColonneBoard().get(nome=nomiColonne[int(field_form.cleaned_data['colonnaParent'])])
+                card.colonnaParent = board.getColonneBoard()\
+                    .get(nome=nomiColonne[int(field_form.cleaned_data['colonnaParent'])])
                 card.save()
                 success = True
             else:
@@ -393,7 +403,8 @@ def editCard(request, board_id, col_name, card_name):
         add_user_form.fields['utentiRegistrati'].choices = utentiNonAssociati
         if add_user_form.is_valid() is True and len(add_user_form.cleaned_data['utentiRegistrati']) > 0:
             # Associate user with card
-            user = ScrumUser.objects.get(username=nomiUtentiNonAssociati[int(add_user_form.cleaned_data['utentiRegistrati'])])
+            user = ScrumUser.objects\
+                .get(username=nomiUtentiNonAssociati[int(add_user_form.cleaned_data['utentiRegistrati'])])
             card.utentiCard.add(user)
             card.save()
             success = True
@@ -402,8 +413,8 @@ def editCard(request, board_id, col_name, card_name):
         del_user_form.fields['utentiAssociati'].choices = utentiAssociati
         if del_user_form.is_valid() is True and len(del_user_form.cleaned_data['utentiAssociati']) > 0:
             # Remove associated user from card
-            for id in del_user_form.cleaned_data['utentiAssociati']:
-                user = ScrumUser.objects.get(username=nomiUtenti[int(id)])
+            for uid in del_user_form.cleaned_data['utentiAssociati']:
+                user = ScrumUser.objects.get(username=nomiUtenti[int(uid)])
                 card.utentiCard.remove(user)
                 card.save()
                 success = True
@@ -422,4 +433,5 @@ def editCard(request, board_id, col_name, card_name):
         add_user_form.fields['utentiRegistrati'].choices = utentiNonAssociati
         del_user_form = DeleteUserForm()
         del_user_form.fields['utentiAssociati'].choices = utentiAssociati
-    return render(request, "scrumboard_app/modify_card.html", {'field_form': field_form, 'add_user_form': add_user_form, 'del_user_form': del_user_form})
+    return render(request, "scrumboard_app/modify_card.html",
+                  {'field_form': field_form, 'add_user_form': add_user_form, 'del_user_form': del_user_form})

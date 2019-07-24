@@ -48,7 +48,8 @@ class Colonna(models.Model):
         return Card.objects.filter(colonnaParent=self)
 
     def creaCard(self, card_titolo, card_desc, card_data, card_story, card_utenti):
-        c = Card(colonnaParent=self, titolo=card_titolo, descrizione=card_desc, dataScadenza=card_data, storyPoint=card_story)
+        c = Card(colonnaParent=self, titolo=card_titolo,
+                 descrizione=card_desc, dataScadenza=card_data, storyPoint=card_story)
         c.save()
         # Card_utenti è una lista di utenti.
         for user in card_utenti:

@@ -17,12 +17,14 @@ class AddCardForm(forms.Form):
     dataCard = forms.DateField(widget=DateInput(), required=True, label='Data di Scadenza')
     colonnaParent = forms.ChoiceField(widget=forms.Select, label="Colonna di appartenenza")
 
+
 class ModifyCardForm(forms.Form):
     nomeCard = forms.CharField(max_length=30, required=True, label='Titolo')
     descCard = forms.CharField(widget=forms.Textarea, required=True, label='Descrizione')
     dataCard = forms.DateField(widget=DateInput(), required=True, label='Data di Scadenza')
     colonnaParent = forms.ChoiceField(widget=forms.Select, label="Colonna di appartenenza")
     storyPoint = forms.IntegerField(max_value=10, min_value=0, required=True, label="Story Point")
+
 
 class ModifyColumnForm(forms.Form):
     nomeColonna = forms.CharField(max_length=30, required=True, label='Nome')
