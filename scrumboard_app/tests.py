@@ -1,9 +1,10 @@
-from django.test import TestCase
+from django.test import TestCase, SimpleTestCase
+from django.test import Client
 from .models import *
 
 import datetime
 
-# Create your tests here.
+# Model Unit tests
 
 class ScrumUserTestCase(TestCase):
     def setUp(self):
@@ -145,14 +146,82 @@ class CardTestCase(TestCase):
         self.assertEqual(len(c.utentiCard.all()), 1)
         self.assertEqual(c.utentiCard.all()[0].username, "test_user")
 
-'''
+# View Acceptance Test
 
-class Card(models.Model):
-    # Genera in automatico una primary key numerica incrementale di id.
-    colonnaParent = models.ForeignKey("Colonna",  on_delete=models.CASCADE)
-    titolo = models.CharField(max_length=30)
-    descrizione = models.TextField()
-    dataScadenza = models.DateField()
-    storyPoint = models.IntegerField()
-    utentiCard = models.ManyToManyField("ScrumUser")
+class AcceptanceTestCase(TestCase):
+    def setUp(self) -> None:
+        self.client.post('/register/',
+                         {"username": "test_user", "password": "test_pass", "conferma_password": "test_pass"})
+        self.client.post('/add_board/', {'nomeBoard': "test_board"})
+        self.client.post('/add_column/', {'nomeColonna': 'test_col', 'boardParent': '0'})
+        self.client.logout()
+        self.client.post('/register/',
+                         {"username": "collab_user", "password": "collab_pass", "conferma_password": "collab_pass"})
+        self.client.logout()
+
+    def test_login_failure(self):
+        response = self.client.post('/login/', {"username": "test_user", "password": "fail_pass"}, follow=True)
+        self.assertFalse(response.context['user'].is_authenticated)
+
+    def test_login_ok(self):
+        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"}, follow=True)
+        self.assertTrue(response.context['user'].is_authenticated)
+
+    def test_logout(self):
+        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"}, follow=True)
+        self.assertTrue(response.context['user'].is_authenticated)
+        response = self.client.post('/logout', follow=True)
+        self.assertFalse(response.context['user'].is_authenticated)
+
+    def test_register(self):
+        response = self.client.post('/register/', {"username": "test_user2", "password": "test_pass2", "conferma_password": "test_pass2"})
+        response = self.client.post('/login/', {"username": "test_user2", "password": "test_pass2"}, follow=True)
+        self.assertTrue(response.context['user'].is_authenticated)
+
+    def test_dashboard(self):
+        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"}, follow=True)
+        response = self.client.get('/dashboard/', follow=True)
+        self.assertContains(response, "Le tue Board")
+        self.assertContains(response, "test_board")
+
+    def test_add_board(self):
+        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"}, follow=True)
+        response = self.client.post('/add_board/', {'nomeBoard': "test_board2"})
+        response = self.client.get('/dashboard/', follow=True)
+        self.assertContains(response, "test_board2")
+
+    def test_add_column(self):
+        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"}, follow=True)
+        response = self.client.post('/add_column/', {'nomeColonna': 'test_col2', 'boardParent': '0'})
+        url = '/board/' + str(Board.objects.get(nome="test_board").id) + '/'
+        response = self.client.get(url)
+        self.assertContains(response, "test_col2")
+
+    def test_add_card(self):
+        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"}, follow=True)
+        url = '/add_card/' + str(Board.objects.get(nome="test_board").id) + '/'
+        response = self.client.post(url, {'nomeCard': "test_card", "descCard": "test_desc",
+                                          "dataCard": str(datetime.date.today()), "colonnaParent": '0'})
+        url = '/board/' + str(Board.objects.get(nome="test_board").id) + '/'
+        response = self.client.get(url)
+        self.assertContains(response, "test_card")
+
+    def test_add_user(self):
+        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"}, follow=True)
+        url = '/add_user/' + str(Board.objects.get(nome="test_board").id) + '/'
+        response = self.client.post(url, {"utentiRegistrati": '0'})
+        response = self.client.get(url)
+        # Collab_user non appare nella lista di utenti associabili
+        self.assertNotContains(response, "<option value=\"0\">collab_user")
+        response = self.client.post(url, {"utentiAssociati": '1'})
+        response = self.client.get(url)
+        # Collab_user appare nella lista di utenti associabili
+        self.assertContains(response, "<option value=\"0\">collab_user")
+
 '''
+urlpatterns = [
+    url(r'^edit_column/(?P<board_id>[0-9]+)/(?P<col_name>.+)/$', views.editColumn, name='edit_column'),
+    url(r'^edit_card/(?P<board_id>[0-9]+)/(?P<col_name>.+)/(?P<card_name>.+)/$', views.editCard, name='edit_card'),
+    url(r'^board/(?P<board_id>[0-9]+)/$', views.board_details, name='board_details'),
+    url(r'^burndown/(?P<board_id>[0-9]+)/$', views.burndown, name='burndown'),
+]'''

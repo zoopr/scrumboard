@@ -238,8 +238,8 @@ def addUser(request, board_id):
     nomiRegistrati = [u.username for u in ScrumUser.objects.all()]
 
     for uname in nomiAssociati:
-        if uname in nomiRegistrati:
-            nomiRegistrati.remove(uname)
+        if uname.username in nomiRegistrati:
+            nomiRegistrati.remove(uname.username)
 
     utentiRegistrati = zip(range(len(nomiRegistrati)), nomiRegistrati)
 
