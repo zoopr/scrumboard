@@ -62,7 +62,6 @@ class Colonna(models.Model):
         c.descrizione = card_desc
         c.dataScadenza = card_data
         c.storyPoint = int(card_story)
-        print(card_story)
         c.save()
 
 

@@ -223,7 +223,7 @@ class AcceptanceTestCase(TestCase):
         # Collab_user appare nella lista di utenti associabili
         self.assertContains(response, "<option value=\"0\">collab_user")
 
-    def test_edit_column(self):
+    def test_edit_column_fields(self):
         response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"})
         # modifyColumnForm
         url = '/edit_column/' + str(Board.objects.get(nome="test_board").id) + '/test_col/'
@@ -231,33 +231,34 @@ class AcceptanceTestCase(TestCase):
         url = '/board/' + str(Board.objects.get(nome="test_board").id) + '/'
         response = self.client.get(url)
         self.assertContains(response, "test_col_1")
-        # AddCardToColForm
         url = '/board/' + str(Board.objects.get(nome="test_board").id) + '/'
         response = self.client.get(url)
         self.assertNotContains(response, '<a href="/edit_card/' + str(Board.objects.get(nome="test_board").id)
                                + '/test_col_1/test_card_other/">test_card_other</a>')
         self.assertContains(response, '<a href="/edit_card/' + str(Board.objects.get(nome="test_board").id)
                             + '/test_col_other/test_card_other/">test_card_other</a>')
-        #
-        url = '/edit_column/' + str(Board.objects.get(nome="test_board").id) + '/test_col_1/'
+
+    def test_edit_column_add_card(self):
+        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"})
+        url = '/edit_column/' + str(Board.objects.get(nome="test_board").id) + '/test_col/'
         response = self.client.post(url, {"cardEsistenti": '0'})
         url = '/board/' + str(Board.objects.get(nome="test_board").id) + '/'
         response = self.client.get(url)
         self.assertContains(response, '<a href="/edit_card/' + str(Board.objects.get(nome="test_board").id)
-                            + '/test_col_1/test_card_other/">test_card_other</a>')
+                            + '/test_col/test_card_other/">test_card_other</a>')
         self.assertNotContains(response, '<a href="/edit_card/' + str(Board.objects.get(nome="test_board").id)
                                + '/test_col_other/test_card_other/">test_card_other</a>')
         # DeleteCardForm
-        url = '/edit_column/' + str(Board.objects.get(nome="test_board").id) + '/test_col_1/'
+        url = '/edit_column/' + str(Board.objects.get(nome="test_board").id) + '/test_col/'
         response = self.client.post(url, {"cardAssociate": '1'})
         url = '/board/' + str(Board.objects.get(nome="test_board").id) + '/'
         response = self.client.get(url)
         self.assertNotContains(response, '<a href="/edit_card/' + str(Board.objects.get(nome="test_board").id)
-                               + '/test_col_1/test_card_other/">test_card_other</a>')
+                               + '/test_col/test_card_other/">test_card_other</a>')
         self.assertNotContains(response, '<a href="/edit_card/' + str(Board.objects.get(nome="test_board").id)
                                + '/test_col_other/test_card_other/">test_card_other</a>')
 
-    def test_edit_card(self):
+    def test_edit_card_fields(self):
         response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"})
         url = '/edit_card/' + str(Board.objects.get(nome="test_board").id) + '/test_col/test_card/'
         # ModifyCardForm
@@ -268,8 +269,11 @@ class AcceptanceTestCase(TestCase):
         response = self.client.get(url)
         self.assertContains(response, "test_card_1")
         self.assertContains(response, "name=\"storyPoint\" value=\"5\"")
+
+    def test_edit_card_add_user(self):
+        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"})
         # addUserForm
-        url = '/edit_card/' + str(Board.objects.get(nome="test_board").id) + '/test_col/test_card_1/'
+        url = '/edit_card/' + str(Board.objects.get(nome="test_board").id) + '/test_col/test_card/'
         response = self.client.post(url, {"utentiRegistrati": '0'})
         response = self.client.get(url)
         # Collab_user non appare nella lista di utenti associabili

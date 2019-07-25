@@ -260,7 +260,6 @@ def addUser(request, board_id):
         add_form = AddUserForm(request.POST)
         add_form.fields['utentiRegistrati'].choices = utentiRegistrati
         if add_form.is_valid() is True and len(add_form.cleaned_data['utentiRegistrati']) > 0:
-            print(add_form.cleaned_data['utentiRegistrati'])
             u = ScrumUser.objects.get(username=nomiRegistrati[int(add_form.cleaned_data['utentiRegistrati'])])
             board.utentiAssociati.add(u)
             board.save()
