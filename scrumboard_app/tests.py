@@ -1,5 +1,4 @@
-from django.test import TestCase, SimpleTestCase
-from django.test import Client
+from django.test import TestCase
 from .models import *
 
 import datetime
@@ -154,6 +153,12 @@ class AcceptanceTestCase(TestCase):
                          {"username": "test_user", "password": "test_pass", "conferma_password": "test_pass"})
         self.client.post('/add_board/', {'nomeBoard': "test_board"})
         self.client.post('/add_column/', {'nomeColonna': 'test_col', 'boardParent': '0'})
+        self.client.post('/add_column/', {'nomeColonna': 'test_col_other', 'boardParent': '0'})
+        url = '/add_card/' + str(Board.objects.get(nome="test_board").id) + '/'
+        self.client.post(url, {'nomeCard': "test_card", "descCard": "test_desc",
+                                "dataCard": str(datetime.date.today()), "colonnaParent": '0'})
+        self.client.post(url, {'nomeCard': "test_card_other", "descCard": "test_desc",
+                               "dataCard": str(datetime.date.today()), "colonnaParent": '1'})
         self.client.logout()
         self.client.post('/register/',
                          {"username": "collab_user", "password": "collab_pass", "conferma_password": "collab_pass"})
@@ -170,7 +175,7 @@ class AcceptanceTestCase(TestCase):
     def test_logout(self):
         response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"}, follow=True)
         self.assertTrue(response.context['user'].is_authenticated)
-        response = self.client.post('/logout', follow=True)
+        response = self.client.post('/logout/', follow=True)
         self.assertFalse(response.context['user'].is_authenticated)
 
     def test_register(self):
@@ -179,35 +184,35 @@ class AcceptanceTestCase(TestCase):
         self.assertTrue(response.context['user'].is_authenticated)
 
     def test_dashboard(self):
-        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"}, follow=True)
-        response = self.client.get('/dashboard/', follow=True)
+        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"})
+        response = self.client.get('/dashboard/')
         self.assertContains(response, "Le tue Board")
         self.assertContains(response, "test_board")
 
     def test_add_board(self):
-        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"}, follow=True)
+        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"})
         response = self.client.post('/add_board/', {'nomeBoard': "test_board2"})
-        response = self.client.get('/dashboard/', follow=True)
+        response = self.client.get('/dashboard/')
         self.assertContains(response, "test_board2")
 
     def test_add_column(self):
-        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"}, follow=True)
+        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"})
         response = self.client.post('/add_column/', {'nomeColonna': 'test_col2', 'boardParent': '0'})
         url = '/board/' + str(Board.objects.get(nome="test_board").id) + '/'
         response = self.client.get(url)
         self.assertContains(response, "test_col2")
 
     def test_add_card(self):
-        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"}, follow=True)
+        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"})
         url = '/add_card/' + str(Board.objects.get(nome="test_board").id) + '/'
-        response = self.client.post(url, {'nomeCard': "test_card", "descCard": "test_desc",
+        response = self.client.post(url, {'nomeCard': "test_card1", "descCard": "test_desc",
                                           "dataCard": str(datetime.date.today()), "colonnaParent": '0'})
         url = '/board/' + str(Board.objects.get(nome="test_board").id) + '/'
         response = self.client.get(url)
-        self.assertContains(response, "test_card")
+        self.assertContains(response, "test_card1")
 
     def test_add_user(self):
-        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"}, follow=True)
+        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"})
         url = '/add_user/' + str(Board.objects.get(nome="test_board").id) + '/'
         response = self.client.post(url, {"utentiRegistrati": '0'})
         response = self.client.get(url)
@@ -218,10 +223,84 @@ class AcceptanceTestCase(TestCase):
         # Collab_user appare nella lista di utenti associabili
         self.assertContains(response, "<option value=\"0\">collab_user")
 
-'''
-urlpatterns = [
-    url(r'^edit_column/(?P<board_id>[0-9]+)/(?P<col_name>.+)/$', views.editColumn, name='edit_column'),
-    url(r'^edit_card/(?P<board_id>[0-9]+)/(?P<col_name>.+)/(?P<card_name>.+)/$', views.editCard, name='edit_card'),
-    url(r'^board/(?P<board_id>[0-9]+)/$', views.board_details, name='board_details'),
-    url(r'^burndown/(?P<board_id>[0-9]+)/$', views.burndown, name='burndown'),
-]'''
+    def test_edit_column(self):
+        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"})
+        # modifyColumnForm
+        url = '/edit_column/' + str(Board.objects.get(nome="test_board").id) + '/test_col/'
+        response = self.client.post(url, {"nomeColonna": 'test_col_1'})
+        url = '/board/' + str(Board.objects.get(nome="test_board").id) + '/'
+        response = self.client.get(url)
+        self.assertContains(response, "test_col_1")
+        # AddCardToColForm
+        url = '/board/' + str(Board.objects.get(nome="test_board").id) + '/'
+        response = self.client.get(url)
+        self.assertNotContains(response, '<a href="/edit_card/' + str(Board.objects.get(nome="test_board").id)
+                               + '/test_col_1/test_card_other/">test_card_other</a>')
+        self.assertContains(response, '<a href="/edit_card/' + str(Board.objects.get(nome="test_board").id)
+                            + '/test_col_other/test_card_other/">test_card_other</a>')
+        #
+        url = '/edit_column/' + str(Board.objects.get(nome="test_board").id) + '/test_col_1/'
+        response = self.client.post(url, {"cardEsistenti": '0'})
+        url = '/board/' + str(Board.objects.get(nome="test_board").id) + '/'
+        response = self.client.get(url)
+        self.assertContains(response, '<a href="/edit_card/' + str(Board.objects.get(nome="test_board").id)
+                            + '/test_col_1/test_card_other/">test_card_other</a>')
+        self.assertNotContains(response, '<a href="/edit_card/' + str(Board.objects.get(nome="test_board").id)
+                               + '/test_col_other/test_card_other/">test_card_other</a>')
+        # DeleteCardForm
+        url = '/edit_column/' + str(Board.objects.get(nome="test_board").id) + '/test_col_1/'
+        response = self.client.post(url, {"cardAssociate": '1'})
+        url = '/board/' + str(Board.objects.get(nome="test_board").id) + '/'
+        response = self.client.get(url)
+        self.assertNotContains(response, '<a href="/edit_card/' + str(Board.objects.get(nome="test_board").id)
+                               + '/test_col_1/test_card_other/">test_card_other</a>')
+        self.assertNotContains(response, '<a href="/edit_card/' + str(Board.objects.get(nome="test_board").id)
+                               + '/test_col_other/test_card_other/">test_card_other</a>')
+
+    def test_edit_card(self):
+        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"})
+        url = '/edit_card/' + str(Board.objects.get(nome="test_board").id) + '/test_col/test_card/'
+        # ModifyCardForm
+        response = self.client.post(url, {"nomeCard": 'test_card_1', "descCard": "desc_card_1",
+                                          "dataCard": datetime.date.today(), "colonnaParent": "0", "storyPoint": "5"})
+
+        url = '/edit_card/' + str(Board.objects.get(nome="test_board").id) + '/test_col/test_card_1/'
+        response = self.client.get(url)
+        self.assertContains(response, "test_card_1")
+        self.assertContains(response, "name=\"storyPoint\" value=\"5\"")
+        # addUserForm
+        url = '/edit_card/' + str(Board.objects.get(nome="test_board").id) + '/test_col/test_card_1/'
+        response = self.client.post(url, {"utentiRegistrati": '0'})
+        response = self.client.get(url)
+        # Collab_user non appare nella lista di utenti associabili
+        self.assertNotContains(response, "<option value=\"0\">collab_user")
+        # delUserForm
+        response = self.client.post(url, {"utentiAssociati": '1'})
+        response = self.client.get(url)
+        # Collab_user appare nella lista di utenti associabili
+        self.assertContains(response, "<option value=\"0\">collab_user")
+
+    def test_board_details(self):
+        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"})
+        url = '/board/' + str(Board.objects.get(nome="test_board").id) + '/'
+        response = self.client.get(url)
+        self.assertContains(response, "test_board")
+        self.assertContains(response, "test_col")
+        self.assertContains(response, "test_card")
+        self.assertContains(response, "test_col_other")
+        self.assertContains(response, "test_card_other")
+        self.assertContains(response, "Aggiungi Utente</button>")
+
+    def test_burndown(self):
+        response = self.client.post('/login/', {"username": "test_user", "password": "test_pass"})
+        url = '/burndown/' + str(Board.objects.get(nome="test_board").id) + '/'
+        response = self.client.get(url)
+        self.assertContains(response, "test_col: 1")
+        self.assertContains(response, "test_col_other: 1")
+        self.assertNotContains(response, "test_col_other: 2")
+        self.assertContains(response,
+                            "Numero di Card della Board:</th>\n                    <td>\n                        <p>2")
+        self.assertContains(response,
+                            "Numero di Card Scadute:</th>\n                    <td>\n                        <p>0")
+        self.assertContains(response,
+                            "Numero di Punti Storia Utilizzati:</th>\n                    <td>\n                        <p>0")

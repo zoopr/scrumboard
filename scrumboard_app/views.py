@@ -320,7 +320,7 @@ def editColumn(request, board_id, col_name):
                     break
                     # This card will always exist.
             success = True
-        # del_card_board
+        # del_card_form
         del_card_form = DeleteCardForm(request.POST)
         del_card_form.fields['cardAssociate'].choices = cardAssociate
         if del_card_form.is_valid() is True and len(del_card_form.cleaned_data['cardAssociate']) > 0:
@@ -381,7 +381,7 @@ def editCard(request, board_id, col_name, card_name):
                 colonna.modificaCard(card.titolo, field_form.cleaned_data['nomeCard'],
                                      field_form.cleaned_data['descCard'], field_form.cleaned_data['dataCard'],
                                      field_form.cleaned_data['storyPoint'])
-
+                card_name = field_form.cleaned_data['nomeCard']
                 # Reload card
                 card = colonna.getCardColonna().get(titolo=card_name)
                 card.colonnaParent = board.getColonneBoard()\
